@@ -22,7 +22,7 @@ for name in files:
     with open(path.join(root, name)) as f:
         ogid = re.compile(r'OGI.{4}', re.I).findall(name)[0]
         duration = f.readlines()[1].split()[1]
-        tg_dict[ogid] = float(duration)
+        tg_dict[ogid.upper()] = float(duration)
 audio_dict = {}
 root, dirs, files = audio_files.next()
 for name in files:
@@ -38,7 +38,7 @@ for name in files:
         print "Duration measure didn't work with this guy", name
         continue
     # print ogid, duration
-    audio_dict[ogid] = duration
+    audio_dict[ogid.upper()] = duration
 
 matched_duration = []
 non_matched_duration = {}
