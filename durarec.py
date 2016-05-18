@@ -3,58 +3,74 @@
 # The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 # THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from sys import argv, 
+from os import walk, path
+import re
+import subprocess
+
 def closeenough(x,y):
     xpre = x - 1
     xpost = x + 1
     return y >= xpre and y <= xpost
 
-with open("wavs.txt", 'r') as w:
-    wavs = w.read().split()
-with open("textgrid.txt", 'r') as t:
-    lines = t.readlines()
+tg_walk = walk(sys.argv[1])
+audio_files = walk(sys.argv[2])
 
+tg_dict = {}
+root, dirs, files = tg_walk.next():
+for name in files:
+    with open(path.join(root, name)) as f:
+        ogid = re.compile(r'OGI.{4}', re.I).findall(name)[0]
+        duration = f.readlines()[1].split()[1]
+        tg_dict[ogid] = float(duration)
+audio_dict = {}
+root, dirs, files = audio_files.next()
+for name in files:
+    try:
+        ogid = re.compile(r'OGI.{4}', re.I).findall(name)[0]
+    except:
+        print "ID extraction didn't work with", name
+        continue
+    command = ['soxi', '-D', path.join(root,name)]
+    try:
+        duration = float(subprocess.check_output(command))
+    except:
+        print "Duration measure didn't work with this guy", name
+        continue
+    # print ogid, duration
+    audio_dict[ogid] = duration
 
-junk = [l.split() for l in lines]
-txts = {j[0][:7] : j[2] for j in junk}
-
-wavdict = dict()
-good_dict = dict()
-
-for x in range(0, len(wavs)-1, 2):
-    name = wavs[x][:7]
-    if name in wavdict.keys():
-        wavdict[name].append(wavs[x+1])
+matched_duration = []
+non_matched_duration = {}
+missing_audio = []
+for key in tg_dict.keys():
+    if key in audio_dict:
+        if close_enough(audio_dict[key], tg_dict[key]):
+            matched_duration.append(key)
+        else:
+            non_matched_duration[key] = (tg_dict[key], audio_dict[key])
     else:
-        wavdict[name] = [wavs[x+1]]
+        missing_audio.append(key)
 
+missing_textgrid = list(set(audio_dict.keys()) - set(tg_dict.keys()))
+print "Mismatched duration"
+print "ID \t TextGrid Duration \t Audio Duration"
+for k, v in non_matched_duration.items():
+    print k +'\t'+str(v[0])+'\t'+str(v[1])
     
-for k in wavdict.keys():
-    if k in txts.keys():
-        good_dict[k] = wavdict[k]
-
-
-bad = list()
-
-for k in good_dict.keys():
-    tlength = float(txts[k])
-    unfound = True
-    for v in good_dict[k]:
-        if closeenough(tlength, float(v)):
-            unfound = False
-    if unfound:
-        bad.append(k)
-
-#for b in sorted(bad):
-#    print b, "wavs:", good_dict[b], "texts",  txts[b]
-
-
-badset = set(bad)
-totalset = set(good_dict.keys())
-goodset = totalset - badset
-
-goodlist = sorted(list(goodset))
-
-for g in goodlist:
-    print g, "wavs:", good_dict[g], "texts:", txts[g]
-
+print "---------------------------"
+print "Missing Audio"
+if len(missing_audio) == 0:
+    print "No missing audio"
+else:
+    for key in missing_audio:
+        print key            
+            
+print "---------------------------"
+print "Missing TextGrids"
+if len(missing_textgrid) == 0:
+    print "No missing TextGrids"
+else:
+    for key in missing_textgrid:
+        print key            
     
