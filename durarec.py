@@ -55,8 +55,11 @@ for key in tg_dict.keys():
 missing_textgrid = list(set(audio_dict.keys()) - set(tg_dict.keys()))
 print "Mismatched duration"
 print "ID \t TextGrid Duration \t Audio Duration"
-for k, v in non_matched_duration.items():
-    print k +'\t'+str(v[0])+'\t'+str(v[1])
+if len(non_matched_duration) == 0:
+    print "No mismatched textgrids/audio"
+else:
+    for k, v in non_matched_duration.items():
+        print k +'\t'+str(v[0])+'\t'+str(v[1])
     
 print "---------------------------"
 print "Missing Audio"
