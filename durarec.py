@@ -3,21 +3,21 @@
 # The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 # THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from sys import argv, 
+from sys import argv
 from os import walk, path
 import re
 import subprocess
 
-def closeenough(x,y):
+def close_enough(x,y):
     xpre = x - 1
     xpost = x + 1
     return y >= xpre and y <= xpost
 
-tg_walk = walk(sys.argv[1])
-audio_files = walk(sys.argv[2])
+tg_walk = walk(argv[1])
+audio_files = walk(argv[2])
 
 tg_dict = {}
-root, dirs, files = tg_walk.next():
+root, dirs, files = tg_walk.next()
 for name in files:
     with open(path.join(root, name)) as f:
         ogid = re.compile(r'OGI.{4}', re.I).findall(name)[0]
